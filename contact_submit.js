@@ -10,34 +10,46 @@ document.addEventListener('DOMContentLoaded', function () {
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const submitBtn = form.querySelector('button[type=submit]');
+    const alertEl = document.getElementById('contactAlert');
+    const showAlert = (type, msg) => {
+      if (!alertEl) {
+        // fallback to native alert
+        alert(msg);
+        return;
+      }
+      alertEl.innerHTML = `<div class="alert alert-${type} alert-dismissible" role="alert">` +
+        `${msg}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+    };
+
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-      // Use Formsubmit's AJAX endpoint. Replace contact@archinevo.in with your desired recipient.
-      // Example endpoint: https://formsubmit.co/ajax/youremail@example.com
-      const endpoint = 'https://praveenmarwal.github.io/Archinevo/contact.php'; // or 'https://example.com/contact.php'
+      // Use the form's action so the same code works locally or on any host
+      const endpoint = form.action || '/contact.php';
 
-      // Send the form as FormData so Formsubmit accepts it.
       const formData = new FormData(form);
-      const { name, email, message, subject } = Object.fromEntries(formData);
+      const payload = Object.fromEntries(formData.entries());
 
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message, subject })
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
       });
 
-      const json = await res.json();
-      if (res.ok) {
-        alert('Message sent — thank you!');
+      let json = {};
+      try { json = await res.json(); } catch (e) { /* ignore parse errors */ }
+
+      if (res.ok && (json.success || res.status === 200)) {
+        showAlert('success', 'Message sent — thank you!');
         form.reset();
       } else {
-        console.error('Formsubmit error:', json);
-        alert(json.message || 'Failed to send message');
+        console.error('Server error:', json);
+        const errMsg = json.error || json.message || 'Failed to send message';
+        showAlert('danger', errMsg);
       }
     } catch (err) {
       console.error(err);
-      alert('Network or server error');
+      showAlert('danger', 'Network or server error');
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
