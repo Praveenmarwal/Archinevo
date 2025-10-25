@@ -3,6 +3,9 @@
 document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('contactForm');
   if (!form) return;
+  // Only attach AJAX handler when the form explicitly opts-in via data-ajax="true"
+  // This lets static form submissions (normal POST) work without JS (avoids CORS/AJAX issues).
+  if (form.dataset.ajax !== 'true') return;
 
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
