@@ -25,16 +25,37 @@ document.addEventListener('DOMContentLoaded', function () {
 
     try {
       // Use the form's action so the same code works locally or on any host
-      const endpoint = form.action || '/contact.php';
+      const action = (form.action || '').trim();
 
-      const formData = new FormData(form);
-      const payload = Object.fromEntries(formData.entries());
+      // If the action points to Formsubmit, use Formsubmit's AJAX endpoint and send FormData
+      const isFormsubmit = action.includes('formsubmit.co');
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      let res;
+      if (isFormsubmit) {
+        // build AJAX endpoint: https://formsubmit.co/ajax/youremail@example.com
+        // action is expected like https://formsubmit.co/youremail@example.com
+        const emailPart = action.replace(/https?:\/\//i, '').replace(/formsubmit\.co\//i, '');
+        const ajaxEndpoint = 'https://formsubmit.co/ajax/' + emailPart;
+
+        const formData = new FormData(form);
+        // Formsubmit expects FormData (do not set Content-Type header)
+        res = await fetch(ajaxEndpoint, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json' },
+          body: formData
+        });
+      } else {
+        // default: send JSON to server-side endpoint (e.g., contact.php)
+        const endpoint = action || '/contact.php';
+        const formData = new FormData(form);
+        const payload = Object.fromEntries(formData.entries());
+
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
 
       let json = {};
       try { json = await res.json(); } catch (e) { /* ignore parse errors */ }
