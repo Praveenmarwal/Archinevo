@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       // Use Formsubmit's AJAX endpoint. Replace contact@archinevo.in with your desired recipient.
       // Example endpoint: https://formsubmit.co/ajax/youremail@example.com
-      const endpoint = '/contact.php'; // or 'https://example.com/contact.php'
+      const endpoint = 'https://praveenmarwal.github.io/Archinevo/contact.php'; // or 'https://example.com/contact.php'
 
       // Send the form as FormData so Formsubmit accepts it.
       const formData = new FormData(form);
